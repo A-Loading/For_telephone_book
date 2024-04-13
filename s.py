@@ -10,8 +10,67 @@ DATA_SQL = "telSQLLITE.bd"
 
 
 def save_sql(data) : 
-    print('sql заглушка')
-
+    connection = sqlite3.connect(DATA_SQL)
+    cursor = connection.cursor()
+    table=['Users','email','phone']
+    sqid=0
+    sqid2=0
+    sqid3=0
+    
+    for i in table:
+        cursor.execute(f'DROP TABLE IF EXISTS {i};')
+        # print(cursor.fetchall())
+        connection.commit()
+    
+    cursor.execute('''CREATE TABLE Users (
+    id INT PRIMARY KEY,
+    name TEXT NOT NULL,
+    age TEXT NOT NULL
+    )
+    ''')
+    connection.commit()
+    
+    cursor.execute('''CREATE TABLE email (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    mail TEXT NOT NULL,
+    UserID INT NOT NULL,
+    FOREIGN KEY (UserID)  REFERENCES Users (id)
+    )
+    ''')
+    connection.commit()
+    
+    cursor.execute('''CREATE TABLE phone (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    phone TEXT NOT NULL,
+    UserID INT NOT NULL,
+    FOREIGN KEY (UserID)  REFERENCES Users (id)
+    )
+    ''')
+    connection.commit()
+    
+    print("SAVE\n[▬▬\t]")
+    
+    for key in list(data.keys()):# заполнение БД
+        
+        cursor.execute(f'INSERT INTO Users (id, name, age) VALUES ("{str(sqid)}","{key}", "{data[key]["birthday"][0]}");')
+        connection.commit()
+        
+        for a in data[key]['phones']:
+            cursor.execute(f'INSERT INTO phone (id, phone, UserID) VALUES ("{str(sqid2)}","{str(a)}", "{str(sqid)}");')
+            connection.commit()
+            sqid2 +=1
+        
+        for a in data[key]['email']:
+            cursor.execute(f'INSERT INTO email (id, mail, UserID) VALUES ("{str(sqid3)}","{str(a)}", "{str(sqid)}");')
+            connection.commit()   
+            sqid3 +=1
+        
+        sqid += 1
+        
+    print("SAVE\n[▬▬▬▬▬▬] 100%")    
+    print("↑sql[√]↑") 
+    connection.close()
+    
 def load_sql(data) : # load_sql заглушка
     pass
 
@@ -156,8 +215,6 @@ def search(data):
     
     return data
     
-    
-
 def import_():
     if not os.path.exists(DATA_JSON):
         print('ERR ↓•JSON•↓')
@@ -182,7 +239,7 @@ def import_():
 def main_menu():
     menu=['Открыть справочник', 'Импортировать', 'Экспортировать', 'Выход']
     data=0
-    if os.path.exists(DATA_SQL):
+    if False:#os.path.exists(DATA_SQL):
         load_sql() # load_sql заглушка
     else:
         print('ERR ↓•SQL•↓')
@@ -203,6 +260,7 @@ def main_menu():
         elif choice == 'Экспортировать':
             save_js(data)
             print('[√] ↑•JSON•↑')
+    print("SAVE\n[▬\t]")
     save_sql(data)
         
     
@@ -211,4 +269,11 @@ def main_menu():
 print('Запуск телефоной книги')
 main_menu()
 
+#debag
+
+
+
+
+# data = load_js()
+# print(data)
 
