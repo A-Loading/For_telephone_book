@@ -71,8 +71,40 @@ def save_sql(data) :
     print("↑sql[√]↑") 
     connection.close()
     
-def load_sql(data) : # load_sql заглушка
-    pass
+def load_sql() :
+    connection = sqlite3.connect(DATA_SQL)
+    cursor = connection.cursor()
+    data={}
+    
+    cursor.execute('SELECT name,id,age FROM Users')
+    users = cursor.fetchall()
+    
+    for line in users:
+        print(line[0])
+        
+        
+        cursor.execute(f'SELECT mail FROM email WHERE UserID = "{line[1]}"')
+        mail = cursor.fetchall()
+        
+        cursor.execute(f'SELECT phone FROM phone WHERE UserID = "{line[1]}"')
+        phone = cursor.fetchall()
+        
+        print(mail)
+        print(phone)
+        
+        print()
+
+        
+        data[str(line[0])]={ 'phones': [phone[0][0]],'birthday': [line[2]],'email': [mail[0][0]] }
+        
+        if len(phone) > 1:
+            data[str(line[0])]['phones'].append(phone[1][0])
+        if len(mail) > 1:
+            data[str(line[0])]['email'].append(mail[1][0])
+        
+        
+    connection.close()
+    return(data)
 
 def save_js(phonebook) :
     with open(DATA_JSON, "w", encoding='utf-8') as write_file:
@@ -239,8 +271,8 @@ def import_():
 def main_menu():
     menu=['Открыть справочник', 'Импортировать', 'Экспортировать', 'Выход']
     data=0
-    if False:#os.path.exists(DATA_SQL):
-        load_sql() # load_sql заглушка
+    if os.path.exists(DATA_SQL):
+        data = load_sql() # load_sql заглушка
     else:
         print('ERR ↓•SQL•↓')
         msgbox("""Ошибка подключения к Базе Данных
@@ -268,12 +300,3 @@ def main_menu():
     
 print('Запуск телефоной книги')
 main_menu()
-
-#debag
-
-
-
-
-# data = load_js()
-# print(data)
-
