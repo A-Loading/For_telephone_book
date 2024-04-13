@@ -27,10 +27,10 @@ def load_js() :
 def print_key(data):
     atr = list(data.keys())
     # print(*atr)
-    return choicebox("Выберите абонента", "Главная форма", atr)
+    return choicebox("Выберите абонента", "Телефонная книга | выбор контакта", atr)
 
 def add_tel(data):
-    fieldNames = ["имя", "тел", "почта", "дата" ]
+    fieldNames = ["фио", "тел","доп тел", "почта","доп почта", "дата" ]
     fieldValues = multpasswordbox("введите даные", "Новый контакт", fieldNames)
     if fieldValues == None or fieldValues[0] == '' :
         print('[X→]')
@@ -40,12 +40,21 @@ def add_tel(data):
         for i in fieldValues:
             if i == '':
                 i='-'
-        data[fieldValues[0]]={ 'phones': [fieldValues[1]],'birthday': [fieldValues[3]],'email': [fieldValues[2]] }
+        data[fieldValues[0]]={ 'phones': [fieldValues[1]],'birthday': [fieldValues[5]],'email': [fieldValues[3]] }
+        
+        if fieldValues[2] != '-':
+            data[fieldValues[0]]['phones'].append(fieldValues[2])
+        if fieldValues[4] != '-':
+            data[fieldValues[0]]['email'].append(fieldValues[4])
+    else:
+        msgbox("""Ошибка
+такое имя уже есть""","Ошибка БД", ok_button="Далее")
+    
     print(data.keys())
+    
     return data
 
-def del_tel(data):
-    key = print_key(data)
+def del_tel(data,key):
     if key == None:
         return data
     data1 = {}
@@ -54,7 +63,70 @@ def del_tel(data):
             data1[i]=data[i]
     return data1
 
+def print_data(key,data):
+    text = "фио : "+str(key)+"\t дата рождения : "+str(data[key]['birthday'][0])+"\n номера: "
+    for i in data[key]['phones']:
+        text = str(text)+" "+str(i)+"|"
+    text = str(text)+"\n email's : "
+    for i in data[key]['email']:
+        text = str(text)+" "+str(i)+"|"
+    return(text)
 
+def upd_feld(data,key,choice,feld,num=0):
+    output = enterbox("Поле \t"+str(choice), "изменение", data[key][feld][num])
+    print("[→↓]"+str(output))
+    data[key][feld][num] = output
+    return(data)
+
+def upd_key(data,key):
+    output = enterbox("Поле \t фио", "изменение", key)
+    if output == None or output == key or output == '':
+        print("[X→]")
+        return(data,key)
+    if not output in data:
+        data[output]=data[key]
+    else:
+        msgbox("""Ошибка
+такое имя уже есть""","Ошибка БД", ok_button="Далее")
+        print("[X→]")
+        return(data,key)
+    
+    
+    return (data , output)
+    
+def upd_tel(data):
+    key = print_key(data)
+    menu=["фио", "тел","доп тел", "почта","доп почта", "дата рождения"]
+    choice='s'
+    while choice != None:
+        text = print_data(key,data)
+        print(text)
+        choice = choicebox(text, "Телефоная книга | Редактирование", menu)
+        if choice == "фио":
+            data,key2 = upd_key(data,key)
+            data1 = del_tel(data,key)
+            if data1 != data:
+                print('[→√]')
+                data = data1
+            key=key2
+        elif choice == "тел":
+            data = upd_feld(data,key,choice,'phones')
+        elif choice == "доп тел":
+            if len(data[key]['phones']) == 1:
+                data[key]['phones'].append("-")
+            data = upd_feld(data,key,choice,'phones',1)
+        elif choice == "почта":
+            data = upd_feld(data,key,choice,'email')
+        elif choice == "доп почта":
+            if len(data[key]['email']) == 1:
+                data[key]['email'].append("-")
+            data = upd_feld(data,key,choice,'email',1)
+        elif choice == "дата рождения":
+            data = upd_feld(data,key,choice,'birthday')        
+        print(str(choice)+"\t--------\t---------\t [√→?]")
+              
+    return(data)
+    
 def search(data):
     
     menu=['просмотр', 'изменить', 'добавить', 'удалить']
@@ -67,26 +139,25 @@ def search(data):
             data = data1
     elif choice == 'просмотр':
         key = print_key(data)
-        text = "фио : "+str(key)+"\t дата рождения : "+str(data[key]['birthday'][0])+"\n номера: "
-        for i in data[key]['phones']:
-            text = str(text)+" "+str(i)+"|"
-        text = str(text)+"\n email's : "
-        for i in data[key]['email']:
-            text = str(text)+" "+str(i)+"|"
+        if key == None:
+            return data
+        text = print_data(key,data)
         print(*text)
         msgbox( text , key, ok_button="дальше")
     elif choice == 'удалить':
-        data1 = del_tel(data)
+        key = print_key(data)
+        data1 = del_tel(data,key)
         if data1 != data:
             print('[→√]')
             data = data1
-    elif choice == 'удалить':
-        msgbox( 'в разработке' , 'изменить', ok_button="дальше")
+    elif choice == 'изменить':
+        data = upd_tel(data)
     
     
     return data
     
     
+
 def import_():
     if not os.path.exists(DATA_JSON):
         print('ERR ↓•JSON•↓')
@@ -107,7 +178,6 @@ def import_():
         save_js(phonebook)
         print('[√] ↑•JSON•↑')
     return load_js()
-
 
 def main_menu():
     menu=['Открыть справочник', 'Импортировать', 'Экспортировать', 'Выход']
