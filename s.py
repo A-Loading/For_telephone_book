@@ -29,8 +29,63 @@ def print_key(data):
     # print(*atr)
     return choicebox("Выберите абонента", "Главная форма", atr)
 
+def add_tel(data):
+    fieldNames = ["имя", "тел", "почта", "дата" ]
+    fieldValues = multpasswordbox("введите даные", "Новый контакт", fieldNames)
+    if fieldValues == None or fieldValues[0] == '' :
+        print('[X→]')
+        return data
+
+    if not fieldValues[0] in data:
+        for i in fieldValues:
+            if i == '':
+                i='-'
+        data[fieldValues[0]]={ 'phones': [fieldValues[1]],'birthday': [fieldValues[3]],'email': [fieldValues[2]] }
+    print(data.keys())
+    return data
+
+def del_tel(data):
+    key = print_key(data)
+    if key == None:
+        return data
+    data1 = {}
+    for i in data:
+        if i != key:
+            data1[i]=data[i]
+    return data1
+
+
 def search(data):
-    pass
+    
+    menu=['просмотр', 'изменить', 'добавить', 'удалить']
+    choice = choicebox("Меню", "Телефоная книга | Главное меню", menu)
+    print(choice)
+    if choice == 'добавить':
+        data1 = add_tel(data)
+        if data1 != data:
+            print('[→√]')
+            data = data1
+    elif choice == 'просмотр':
+        key = print_key(data)
+        text = "фио : "+str(key)+"\t дата рождения : "+str(data[key]['birthday'][0])+"\n номера: "
+        for i in data[key]['phones']:
+            text = str(text)+" "+str(i)+"|"
+        text = str(text)+"\n email's : "
+        for i in data[key]['email']:
+            text = str(text)+" "+str(i)+"|"
+        print(*text)
+        msgbox( text , key, ok_button="дальше")
+    elif choice == 'удалить':
+        data1 = del_tel(data)
+        if data1 != data:
+            print('[→√]')
+            data = data1
+    elif choice == 'удалить':
+        msgbox( 'в разработке' , 'изменить', ok_button="дальше")
+    
+    
+    return data
+    
     
 def import_():
     if not os.path.exists(DATA_JSON):
